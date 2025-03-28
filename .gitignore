@@ -1,0 +1,7 @@
+.env
+dist
+node_modules
+*.zip
+*.rar
+.idea
+package-lock.json
