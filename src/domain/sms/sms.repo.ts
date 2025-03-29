@@ -65,6 +65,9 @@ class SmsRepo {
     if (filter.message_id) {
       whereOptions.id = { [Op.iLike]: `%${filter.message_id}%` };
     }
+    if (filter.sms_type) {
+      whereOptions.sms_type = { [Op.eq]: `${filter.sms_type}` };
+    }
     if (filter.startDate && filter.endDate) {
       const endOfDay: Date = new Date(filter.endDate);
       endOfDay.setDate(endOfDay.getDate() + 1);
@@ -89,8 +92,8 @@ class SmsRepo {
         attributes: ["id", "name"],
       })
     ).map((admin) => ({
-      label: `${admin.name}`,
       value: admin.id,
+      label: `${admin.name}`,
     }));
 
     return {

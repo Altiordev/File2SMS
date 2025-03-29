@@ -11,7 +11,7 @@ export const checkSuperAdminMiddleware = async (
   try {
     const admin = await authenticateAdmin(req);
 
-    if (!admin.isSuperAdmin) return next(new UnauthorizedError());
+    if (!admin.isSuperAdmin) throw new UnauthorizedError();
 
     req.admin = admin;
     next();

@@ -15,6 +15,8 @@ import FileRepo from "../file/file.repo";
 import dotenv from "dotenv";
 import AdminModel from "../auth/models/admin.model";
 import Exceljs, { Row, Workbook, Worksheet } from "exceljs";
+import { template_type_enum } from "../../enums/enums";
+import SmsModel from "./sms.model";
 
 dotenv.config();
 
@@ -130,6 +132,7 @@ export default class SmsService {
         recipient: recipients[i],
         message_text,
         adminId: data.adminId,
+        sms_type: template_type_enum.OTHER,
       };
 
       // SMSni yuborish
@@ -145,6 +148,7 @@ export default class SmsService {
   public async send_message(data: SmsDto): Promise<ISmsModel> {
     const { recipient, message_text } = data;
     const { id } = await this.write_to_database(data);
+
     const sendData: ISms = {
       recipient,
       message_id: id,
@@ -165,7 +169,7 @@ export default class SmsService {
     return updatedSms.get({ plain: true });
   }
 
-  private async write_to_database(data: SmsDto): Promise<ISmsModel> {
+  private async write_to_database(data: SmsDto): Promise<SmsModel> {
     return await this.repo.create(data);
   }
 
