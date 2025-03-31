@@ -4,9 +4,29 @@ import { StatusCode } from "../../enums/status-code.enum";
 import TemplateService from "./template.service";
 import { CreateTemplateDTO, UpdateTemplateDTO } from "./template.dto";
 import { validation } from "../../utils/validation.util";
+import { ITemplate } from "../../interfaces/template.interface";
 
 class TemplateController {
   private service: TemplateService = new TemplateService();
+
+  public getAll = async (_: Request, res: Response, next: NextFunction) => {
+    try {
+      const results = await this.service.getAllTemplates();
+      res.status(StatusCode.Ok).json(results);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getOne = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const result: ITemplate = await this.service.getTemplateById(id);
+      res.status(StatusCode.Ok).json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
 
   /**
    * POST: /api/template

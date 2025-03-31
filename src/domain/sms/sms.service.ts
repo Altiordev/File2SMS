@@ -17,6 +17,7 @@ import AdminModel from "../auth/models/admin.model";
 import Exceljs, { Row, Workbook, Worksheet } from "exceljs";
 import { template_type_enum } from "../../enums/enums";
 import SmsModel from "./sms.model";
+import logger from "../../utils/logger.util";
 
 dotenv.config();
 
@@ -146,7 +147,12 @@ export default class SmsService {
   }
 
   public async send_message(data: SmsDto): Promise<ISmsModel> {
-    const { recipient, message_text } = data;
+    const { recipient, message_text, sms_type } = data;
+
+    if (!sms_type) {
+      data.sms_type = template_type_enum.OTHER;
+    }
+
     const { id } = await this.write_to_database(data);
 
     const sendData: ISms = {
@@ -206,7 +212,8 @@ export default class SmsService {
         },
       );
     } catch (e: any) {
-      console.error("send_sms metodida xatolik: " + e);
+      logger.error(`send_sms metodida xatolik: ${e}`);
+
       return e?.response ?? { status: 500, data: "Internal Server Error" };
     }
   }

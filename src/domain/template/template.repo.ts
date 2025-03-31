@@ -14,6 +14,21 @@ import { Op } from "sequelize";
 class TemplateRepo {
   private templateModel = TemplateModel;
 
+  public async findAll(): Promise<TemplateModel[] | []> {
+    return await this.templateModel.findAll();
+  }
+
+  /**
+   * Bitta shablonni PK (id) bo'yicha olish
+   */
+  public async findById(id: string): Promise<TemplateModel> {
+    const template = await this.templateModel.findByPk(id);
+    if (!template) {
+      throw new NotFoundError("Shablon topilmadi!");
+    }
+    return template;
+  }
+
   public async create(data: CreateTemplateDTO) {
     try {
       const templateDirPath = path.join(process.cwd(), "public", data.name);

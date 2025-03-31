@@ -3,15 +3,105 @@ import TemplateRepo from "./template.repo";
 import TemplateModel from "./template.model";
 import { CreateTemplateDTO, UpdateTemplateDTO } from "./template.dto";
 import SmsService from "../sms/sms.service";
-import { NotFoundError } from "../../errors/errors";
+import { InternalServerError, NotFoundError } from "../../errors/errors";
 import path from "path";
 import fs from "fs";
 import { Workbook, Worksheet } from "exceljs";
 import { template_type_enum } from "../../enums/enums";
+import logger from "../../utils/logger.util";
+import { ITemplate } from "../../interfaces/template.interface";
 
 class TemplateService {
   private repo: TemplateRepo = new TemplateRepo();
   private smsService: SmsService = new SmsService();
+
+  public async getAllTemplates(): Promise<TemplateModel[]> {
+    return this.repo.findAll();
+  }
+
+  public async getTemplateById(id: string): Promise<ITemplate> {
+    try {
+      // 1) DBdan Template topish
+      const template: TemplateModel = await this.repo.findById(id);
+
+      // 2) public/<template.name> papka manzilini aniqlash
+      const folderPath = path.join(process.cwd(), "public", template.name);
+      if (!fs.existsSync(folderPath)) {
+        return {
+          template,
+          files: [],
+          sentFiles: [],
+        };
+      }
+
+      // 3) Asosiy papkada 'sent' dan tashqari fayllarni yig'ish
+      const allInFolder = fs.readdirSync(folderPath, { withFileTypes: true });
+
+      // sent papkasidan tashqari faqat FAYL bo'lgan ro'yxat
+      const files = allInFolder
+        .filter((dirent) => dirent.isFile() && dirent.name !== "sent")
+        .map((dirent) => `/public/${template.name}/${dirent.name}`);
+
+      // 4) sent papkasidagi fayllarni ham o‘qiymiz (agar bo‘lsa)
+      const sentDir = path.join(folderPath, "sent");
+      let sentFiles: string[] = [];
+      if (fs.existsSync(sentDir)) {
+        const allInSent = fs.readdirSync(sentDir, { withFileTypes: true });
+        sentFiles = allInSent
+          .filter((dirent) => dirent.isFile())
+          .map((dirent) => `/public/${template.name}/sent/${dirent.name}`);
+      }
+
+      return { template, files, sentFiles };
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  }
+
+  // public async getTemplateById(id: string): Promise<ITemplate> {
+  //   try {
+  //     const template: TemplateModel = await this.repo.findById(id);
+  //
+  //     const folderPath: string = path.join(
+  //       process.cwd(),
+  //       "public",
+  //       template.name,
+  //     );
+  //     if (!fs.existsSync(folderPath)) {
+  //       return {
+  //         template,
+  //         files: [],
+  //         sentFiles: [],
+  //       };
+  //     }
+  //
+  //     const files: string[] = fs
+  //       .readdirSync(folderPath, { withFileTypes: true })
+  //       .filter((dirent: fs.Dirent): boolean => {
+  //         return dirent.name !== "sent";
+  //       })
+  //       .filter((dirent: fs.Dirent) => dirent.isFile())
+  //       .map((dirent: fs.Dirent) => dirent.name);
+  //
+  //     const sentPath: string = path.join(folderPath, "sent");
+  //     let sentFiles: string[] = [];
+  //     if (fs.existsSync(sentPath)) {
+  //       sentFiles = fs
+  //         .readdirSync(sentPath, { withFileTypes: true })
+  //         .filter((dirent: fs.Dirent) => dirent.isFile())
+  //         .map((dirent: fs.Dirent) => dirent.name);
+  //     }
+  //
+  //     return {
+  //       template,
+  //       files,
+  //       sentFiles,
+  //     };
+  //   } catch (error) {
+  //     logger.error((error as Error).message);
+  //     throw new InternalServerError((error as Error).message);
+  //   }
+  // }
 
   /**
    * Shablon yaratish
@@ -105,13 +195,13 @@ class TemplateService {
       await this.smsService.send_message({
         recipient: phoneNumber,
         message_text: messageText,
-        adminId: 1, // kim yuborayotgan bo'lsa, real loyihada berishingiz mumkin
+        adminId: 1,
         sms_type: template.type || template_type_enum.OTHER,
       });
       sentCount++;
     }
 
-    console.log(
+    logger.info(
       `Shablon[${template.name}] Excel fayl[${excelFileName}] bo'yicha ${sentCount} ta SMS yuborildi.`,
     );
   }

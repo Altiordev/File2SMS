@@ -4,6 +4,7 @@ import { IFile, IFileModel } from "../../interfaces/file.interface";
 import { BadRequestError } from "../../errors/errors";
 import { ErrorMessage } from "../../enums/error-message.enum";
 import { StatusCode } from "../../enums/status-code.enum";
+import logger from "../../utils/logger.util";
 
 class FileUploadController {
   private service: FileUploadService = new FileUploadService();
@@ -17,7 +18,7 @@ class FileUploadController {
 
       res.status(StatusCode.Ok).json(result);
     } catch (error) {
-      console.log(error);
+      logger.error(error);
       next(error);
     }
   };
@@ -39,7 +40,7 @@ class FileUploadController {
         data: result,
       });
     } catch (error) {
-      console.log(error);
+      logger.error(error);
       next(error);
     }
   };
