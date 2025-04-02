@@ -12,6 +12,7 @@ import {
 } from "sequelize-typescript";
 import AdminModel from "../auth/models/admin.model";
 import { template_type_enum } from "../../enums/enums";
+import TemplateModel from "../template/template.model";
 
 @Table({
   timestamps: true,
@@ -31,6 +32,13 @@ class Sms extends Model {
 
   @BelongsTo(() => AdminModel)
   admin: AdminModel;
+
+  @ForeignKey(() => TemplateModel)
+  @Column
+  template_id: string;
+
+  @BelongsTo(() => TemplateModel)
+  template: TemplateModel;
 
   @Column({
     type: DataType.ENUM,

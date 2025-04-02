@@ -11,6 +11,7 @@ import { Op, WhereOptions } from "sequelize";
 import { Sequelize } from "sequelize-typescript";
 import AdminModel from "../auth/models/admin.model";
 import CoreRepo from "../core/core.repo";
+import TemplateModel from "../template/template.model";
 
 class SmsRepo {
   private model: typeof SmsModel = SmsModel;
@@ -65,6 +66,9 @@ class SmsRepo {
     if (filter.message_id) {
       whereOptions.id = { [Op.iLike]: `%${filter.message_id}%` };
     }
+    if (filter.template_id) {
+      whereOptions.template_id = { [Op.iLike]: `%${filter.template_id}%` };
+    }
     if (filter.sms_type) {
       whereOptions.sms_type = { [Op.eq]: `${filter.sms_type}` };
     }
@@ -79,7 +83,10 @@ class SmsRepo {
 
     const messages: IFindAndCountAll = await this.model.findAndCountAll({
       where: whereOptions,
-      include: [{ model: AdminModel, attributes: ["name"] }],
+      include: [
+        { model: AdminModel, attributes: ["name"] },
+        { model: TemplateModel, as: "template" },
+      ],
       offset,
       limit,
       order: [["createdAt", "DESC"]],
@@ -101,8 +108,17 @@ class SmsRepo {
       totalCount: messages.count,
       admins,
       result: messages.rows.map((message) => ({
-        ...message.toJSON(),
+        id: message.id,
+        adminId: message.adminId,
+        sms_type: message.sms_type,
+        recipient: message.recipient,
+        message_text: message.message_text,
+        play_mobile_data: message.play_mobile_data,
+        play_mobile_status: message.play_mobile_status,
         admin: message.admin ? `${message.admin.name}` : null,
+        template: message.template,
+        createdAt: message.createdAt,
+        updatedAt: message.updatedAt,
       })),
     };
   }

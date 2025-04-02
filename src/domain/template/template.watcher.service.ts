@@ -18,9 +18,7 @@ export default class TemplateWatcherService {
     this.timer = null;
   }
 
-  public startWatching(
-    intervalMs = Number(process.env.INTERVAL_SCAN_PUBLIC) || 1000,
-  ): void {
+  public startWatching(intervalMs = 1000): void {
     logger.info(
       `TemplateWatcherService started. Scanning every ${intervalMs}ms...`,
     );

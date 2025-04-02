@@ -1,11 +1,14 @@
 import SmsModel from "../domain/sms/sms.model";
 import { template_type_enum } from "../enums/enums";
 import AdminModel from "../domain/auth/models/admin.model";
+import TemplateModel from "../domain/template/template.model";
 
 export interface ISmsModel {
   id?: string;
   adminId: number;
   admin?: AdminModel;
+  template_id: number;
+  template?: TemplateModel;
   recipient: string;
   message_text: string;
   sms_type: template_type_enum;
@@ -33,6 +36,7 @@ export interface IFilterBodySms {
   startDate: string;
   endDate: string;
   admin_id?: number;
+  template_id?: string;
   sms_type?: template_type_enum;
 }
 
@@ -49,6 +53,7 @@ export interface IGetAllSms {
     adminId: number | null;
     recipient: string;
     message_text: string;
+    template: TemplateModel;
     sms_type: template_type_enum;
     play_mobile_status: number;
     play_mobile_data: string;
